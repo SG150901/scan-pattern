@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib
+import matplotlib.markers
 import matplotlib.pyplot as plt
 import tqdm
 
@@ -45,6 +46,10 @@ def rot_surfaces(t, n, omega, theta0):
 
 
 def main():
+    #  choose scanning pattern
+    # repetitive = True  # True: repetitive, False: non-repetitive
+    repetitive = False
+
     # define all the parameters
     # refractive index of the prisms
     n1 = 1.5
@@ -52,86 +57,121 @@ def main():
     n3 = 1.5
     nAir = 1.0
     # angle of prisms (in radians); calculated from k (ratio of deviation angles)
-    alpha1_deg = 15.0
-    # alpha1_deg = 17.9243
+    alpha1_deg = 28.1474  # degrees
+    # alpha1_deg = 5.72076  # degrees
     alpha1 = np.deg2rad(alpha1_deg)
-    # k1 = 0.775
-    k1 = 0.75
-    k2 = 0.2
+    k1 = 1.071
+    # k1 = 4.65408
+    k2 = 0.100582
+    # k2 = -0.16
     alpha2 = k1 * alpha1 * (n1 - 1) / (n2 - 1)
     alpha3 = k2 * alpha1 * (n1 - 1) / (n3 - 1)
-    # rotation velocity of the prisms (in radians per  second) and initial rotation angle (in radians)
-    # theta01 = np.pi/2
+    # rotation velocity of the prisms (in radians per second) and initial rotation angle (in radians)
+    # theta01 = np.pi
     theta01 = 0.0
-    # theta02 = np.pi/2
+    # theta02 = np.pi
     theta02 = 0.0
-    # theta03 = np.pi/2
+    # theta03 = np.pi
     theta03 = 0.0
-    omega1_rpm = 4000
+    if repetitive is True:
+        omega1_rpm = 3000.0
+        M1 = -1.0
+        M2 = -3.0
+    else:  # non-repetitive
+        omega1_rpm = 631.7
+        M1 = -(5.0 - 1.0 / (10 + 2 / 3))
+        # M1 = -4.8
+        M2 = 1.0
     omega1 = omega1_rpm * 2 * np.pi / 60  # rad per sec
-    # M1 = -4.81
-    M1 = -1.0
-    # M2 = 1.0
-    M2 = -3.0
     omega2 = omega1 * M1
     omega3 = omega1 * M2
 
-    # definition of the prism surfaces
+    # definition of the prism surfaces (1= perpendicular to the rotation axis, 2= angled side of prism)
+    # configuration of the prisms: 12 - 21 - 21
+    config1 = 12
+    config2 = 21
+    config3 = 21
     # prism 1 (12)
-    d1 = 15.0  # mm
-    R1 = 16.0  # mm
+    d1 = 1.0  # mm
+    R1 = 10.0  # mm
     # points on the prism surfaces of rotation axis
     P11 = np.array([0, 0, 0])
     z12 = d1 + R1 * np.tan(alpha1)
     P12 = np.array([0, 0, d1 + z12])
     # normal vectors to the prism surfaces
-    n11 = np.array([0, 0, 1])
-    n12 = np.array([0, np.sin(alpha1), np.cos(alpha1)])
-    n12_0 = n12
+    if config1 == 12:
+        n11 = np.array([0, 0, 1])
+        n12 = np.array([0, np.sin(alpha1), np.cos(alpha1)])
+        n12_0 = n12
+    elif config1 == 21:
+        n11 = np.array([0, -np.sin(alpha1), np.cos(alpha1)])
+        n11_0 = n11
+        n12 = np.array([0, 0, 1])
+    else:
+        raise ValueError('Invalid configuration for prism 1')
     # air between prism 1 and prism 2
-    dair1 = 2.4  # mm
+    dair1 = 2.0  # mm
 
     # prism 2 (21)
-    d2 = 15.0  # mm
-    R2 = 16.0  # mm
+    d2 = 1.0  # mm
+    R2 = 10.0  # mm
     # points on the prism surfaces of rotation axis
     P21 = np.array([0, 0, z12 + dair1])
     z22 = z12 + dair1 + d2 + R2 * np.tan(alpha2)
     P22 = np.array([0, 0, z22])
     # normal vectors to the prism surfaces
-    n21 = np.array([0, -np.sin(alpha2), np.cos(alpha2)])
-    n21_0 = n21
-    n22 = np.array([0, 0, 1])
+    if config2 == 12:
+        n21 = np.array([0, 0, 1])
+        n22 = np.array([0, np.sin(alpha2), np.cos(alpha2)])
+        n22_0 = n22
+    elif config2 == 21:
+        n21 = np.array([0, -np.sin(alpha2), np.cos(alpha2)])
+        n21_0 = n21
+        n22 = np.array([0, 0, 1])
+    else:
+        raise ValueError('Invalid configuration for prism 2')
     # air between prism 2 and prism 3
-    dair2 = 2.4  # mm
+    dair2 = 2.0  # mm
 
     # prism 3 (21)
-    d3 = 15.0  # mm
-    R3 = 16.0  # mm
+    d3 = 1.0  # mm
+    R3 = 10.0  # mm
     # points on the prism surfaces of rotation axis
     P31 = np.array([0, 0, z22 + dair2])
     z32 = z22 + dair2 + d3 + R3 * np.tan(alpha3)
     P32 = np.array([0, 0, z32])
     # normal vectors to the prism surfaces
-    n31 = np.array([0, -np.sin(alpha3), np.cos(alpha3)])
-    n31_0 = n31
-    n32 = np.array([0, 0, 1])
+    if config3 == 12:
+        n31 = np.array([0, 0, 1])
+        n32 = np.array([0, np.sin(alpha3), np.cos(alpha3)])
+        n32_0 = n32
+    elif config3 == 21:
+        n31 = np.array([0, -np.sin(alpha3), np.cos(alpha3)])
+        n31_0 = n31
+        n32 = np.array([0, 0, 1])
+    else:
+        raise ValueError('Invalid configuration for prism 3')
 
     # distance to observation plane
-    D = 10.00  # mm
+    D = 100000.0  # mm
+    # D = 5000.0  # mm
     # observation plane
     P4 = np.array([0, 0, z32 + D])
-    # P4 = np.array([0, 0, z22 + D])
+    # P4 = np.array([0, 0, z22 + D])  # to show the pattern when using prism 1 and prism 2 (also change Pobs)
+    # P4 = np.array([0, 0, z12 + D])  # to show the pattern when only using prism 1 (also change Pobs)
     n4 = np.array([0, 0, 1])
 
     # beam line
     P00 = np.array([0, 0, -1])
-    # lims = 0.006962
-    lims = 0.006
+    lims = 0.026913  # mm  # half the distance between the most left and right beam at the source
     b00s = [np.array([a, 0, 1])/np.linalg.norm(np.array([a, 0, 1])) for a
             in np.linspace(-lims, lims, 6)
             ]
-    ts = np.arange(0, 0.075*1, 1/240000)
+    if repetitive is True:
+        ts = np.arange(0, 1*0.02, 1/240000)  # repetitive
+    else:  # non-repetitive
+        # ts = np.arange(0, 1.0/(10+2/3)*1.0456543, 1/240000)  # only one rotation
+        ts = np.arange(0, 1*1.0456543, 1/240000)
 
     # list for the intersection point coordinates with the observation plane
     PobsX = np.empty((ts.shape[0]*6,), dtype=float)
@@ -140,6 +180,20 @@ def main():
 
     # loop over the integration time
     for tix, t in enumerate(tqdm.tqdm(ts)):
+        # rotate the normal vectors of the prism surfaces (only the angular surfaces(Nr.2); the others stay the same)
+        if config1 == 12:
+            n12 = rot_surfaces(t, n12_0, omega1, theta01)
+        else:
+            n11 = rot_surfaces(t, n11_0, omega1, theta01)
+        if config2 == 12:
+            n22 = rot_surfaces(t, n22_0, omega2, theta02)
+        else:
+            n21 = rot_surfaces(t, n21_0, omega2, theta02)
+        if config3 == 12:
+            n32 = rot_surfaces(t, n32_0, omega3, theta03)
+        else:
+            n31 = rot_surfaces(t, n31_0, omega3, theta03)
+        # refract the beam at the prism surfaces and the observation plane
         for bix, b00 in enumerate(b00s):
             # Refraction at surface 11
             Pb11 = intersect((P00, b00), (P11, n11))
@@ -167,48 +221,48 @@ def main():
 
             # Refraction at observation plane
             Pobs = intersect((Pb32, b32), (P4, n4))
-            # Pobs = intersect((Pb12, b12), (P4, n4))
-            # Pobs = intersect((Pb22, b22), (P4, n4))
+            # Pobs = intersect((Pb22, b22), (P4, n4))  # to show the pattern when using prism 1 and prism 2 (also change P4)
+            # Pobs = intersect((Pb12, b12), (P4, n4))  # to show the pattern when only using prism 1 (also change P4)
             # append the intersection point with the observation plane
             PobsX[tix*6+bix] = Pobs[0]
             PobsY[tix*6+bix] = Pobs[1]
             PobsZ[tix*6+bix] = Pobs[2]
 
-        # rotate the normal vectors of the prism surfaces (only the angular surfaces(Nr.2); the others stay the same)
-        n12 = rot_surfaces(t, n12_0, omega1, theta01)
-        n21 = rot_surfaces(t, n21_0, omega2, theta02)
-        n31 = rot_surfaces(t, n31_0, omega3, theta03)
-
     # show intersection with observation plane as plot
     plt.figure(figsize=(10, 10), dpi=300)
     marker = matplotlib.markers.MarkerStyle(marker='o')
     marker.fillstyle = 'full'
+    # calculate the FOV angles phi and kappa
     phi = np.atan2(PobsX, D) * 180/np.pi
     kappa = np.atan2(PobsY, np.sqrt(np.square(PobsX) + D**2)) * 180/np.pi
-    # plt.scatter(PobsX, PobsY, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
-    plt.scatter(phi, kappa, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
+    plt.scatter(PobsX, PobsY, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
+    # plt.scatter(phi, kappa, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
     plt.axis('equal')
-    plt.title(f'M1={M1} M2={M2} k1={k1} k2={k2} alpha1={alpha1_deg} omega1={omega1_rpm} '
-              f'd1={d1}\nd2={d2} d3={d3} R1={R1} R2={R2} R3={R3} dair1={dair1} dair2={dair2} D={D}')
+    plt.title(f'M1={M1} M2={M2} k1={k1} k2={k2} alpha1={alpha1_deg} omega1={omega1_rpm} lims={lims} '
+              f'd1={d1}\nd2={d2} d3={d3} R1={R1} R2={R2} R3={R3} dair1={dair1} dair2={dair2} D={D} t={ts[-1]}')
     # plt.title(f'M1={M1} k1={k1} alpha1={alpha1_deg} omega1={omega1_rpm}\n'
     #           f'd1={d1} d2={d2} R1={R1} R2={R2} dair1={dair1} D={D}')
-    # plt.xlim(-4, 4)
-    # plt.ylim(-30, -40)
-    # plt.xlim(-2, 2)
-    # plt.ylim(-2, 2)
-    plt.show()
+    # plt.xlim(-4000, 4000)
+    # plt.ylim(-3000, 3000)
+    # plt.xlim(-7500, 7500)
+    # plt.ylim(-70000, -45000)
 
     # print the maximal phi and kappa values
-    print(f'Maximal phi: {np.max(phi)}')
-    print(f'Maximal kappa: {np.max(kappa)}')
-    # get the phi values for kappa = 0 till 0.001
+    """print(f'Maximal phi: {np.max(phi)}')
+    print(f'Maximal kappa: {np.max(kappa)}')"""
+    # get the phi values for kappa = 0 till 0.01
     kappa_0 = 0
-    phi_0 = phi[np.where((kappa >= kappa_0) & (kappa <= kappa_0 + 0.001))]
-    print(f'Phi values for kappa = 0: {phi_0}')
+    phi_0 = phi[np.where((kappa >= kappa_0) & (kappa <= kappa_0 + 0.1))]
+    # print(f'Phi values for kappa = 0: {phi_0}')
     # print the maximal and minimal phi value for kappa = 0
-    print(f'Maximal phi for kappa = 0: {np.max(phi_0)}')
-    print(f'Minimal phi for kappa = 0: {np.min(phi_0)}')
-
+    """print(f'Maximal phi for kappa = 0: {np.max(phi_0)}')
+    print(f'Minimal phi for kappa = 0: {np.min(phi_0)}')"""
+    plt.text(0.01, 0.01, f'Max $\phi$: {np.max(phi):.5f}\n'
+                       f'Max $\kappa$: {np.max(kappa):.5f}\n'
+                       f'$\phi$_0[0]: {phi_0[0]:.5f}\n'
+                       f'$\phi$_0[5]: {phi_0[5]:.5f}',
+             horizontalalignment='left', verticalalignment='bottom', transform=plt.gca().transAxes)
+    plt.show()
 
 if __name__ == '__main__':
     main()
