@@ -50,47 +50,52 @@ def main():
     # repetitive = True  # True: repetitive, False: non-repetitive
     repetitive = False
 
-    # define all the parameters
+    # define all the parameters (below for Livox Mid-40)
+    # n1, n2, alpha1, alpha2, omega1, omega2 taken from https://www.mdpi.com/1424-8220/21/14/4722
     # refractive index of the prisms
-    n1 = 1.5
-    n2 = 1.5
-    n3 = 1.5
+    n1 = 1.509
+    n2 = 1.509
     nAir = 1.0
     # angle of prisms (in radians); calculated from k (ratio of deviation angles)
-    alpha1_deg = 28.1474  # degrees
-    # alpha1_deg = 5.72076  # degrees
+    alpha1_deg = 18.0
+    alpha2_deg = 18.0
     alpha1 = np.deg2rad(alpha1_deg)
-    k1 = 1.071
+    alpha2 = np.deg2rad(alpha2_deg)
+    # k1 = 1.071
     # k1 = 4.65408
-    k2 = 0.100582
+    # k2 = 0.100582
     # k2 = -0.16
-    alpha2 = k1 * alpha1 * (n1 - 1) / (n2 - 1)
-    alpha3 = k2 * alpha1 * (n1 - 1) / (n3 - 1)
+    # alpha2 = k1 * alpha1 * (n1 - 1) / (n2 - 1)
+    # alpha3 = k2 * alpha1 * (n1 - 1) / (n3 - 1)
     # rotation velocity of the prisms (in radians per second) and initial rotation angle (in radians)
     # theta01 = np.pi
     theta01 = 0.0
     # theta02 = np.pi
     theta02 = 0.0
     # theta03 = np.pi
-    theta03 = 0.0
-    if repetitive is True:
-        omega1_rpm = 3000.0
-        M1 = -1.0
-        M2 = -3.0
-    else:  # non-repetitive
-        omega1_rpm = 631.7
-        M1 = -(5.0 - 1.0 / (10 + 2 / 3))
+    #theta03 = 0.0
+    #if repetitive is True:
+    #    omega1_rpm = 3000.0
+    #    M1 = -1.0
+    #    M2 = -3.0
+    #else:  # non-repetitive
+    #    omega1_rpm = 631.7
+    #    M1 = -(5.0 - 1.0 / (10 + 2 / 3))
         # M1 = -4.8
-        M2 = 1.0
+    #    M2 = 1.0
+    #omega1 = omega1_rpm * 2 * np.pi / 60  # rad per sec
+    #omega2 = omega1 * M1
+    #omega3 = omega1 * M2
+    omega1_rpm = -4664
+    omega2_rpm = 7294
     omega1 = omega1_rpm * 2 * np.pi / 60  # rad per sec
-    omega2 = omega1 * M1
-    omega3 = omega1 * M2
+    omega2 = omega2_rpm * 2 * np.pi / 60  # rad per sec
 
     # definition of the prism surfaces (1= perpendicular to the rotation axis, 2= angled side of prism)
     # configuration of the prisms: 12 - 21 - 21
     config1 = 12
     config2 = 21
-    config3 = 21
+    # config3 = 21
     # prism 1 (12)
     d1 = 1.0  # mm
     R1 = 10.0  # mm
@@ -134,30 +139,30 @@ def main():
     dair2 = 2.0  # mm
 
     # prism 3 (21)
-    d3 = 1.0  # mm
-    R3 = 10.0  # mm
+    #d3 = 1.0  # mm
+    #R3 = 10.0  # mm
     # points on the prism surfaces of rotation axis
-    P31 = np.array([0, 0, z22 + dair2])
-    z32 = z22 + dair2 + d3 + R3 * np.tan(alpha3)
-    P32 = np.array([0, 0, z32])
+    #P31 = np.array([0, 0, z22 + dair2])
+    #z32 = z22 + dair2 + d3 + R3 * np.tan(alpha3)
+    #P32 = np.array([0, 0, z32])
     # normal vectors to the prism surfaces
-    if config3 == 12:
-        n31 = np.array([0, 0, 1])
-        n32 = np.array([0, np.sin(alpha3), np.cos(alpha3)])
-        n32_0 = n32
-    elif config3 == 21:
-        n31 = np.array([0, -np.sin(alpha3), np.cos(alpha3)])
-        n31_0 = n31
-        n32 = np.array([0, 0, 1])
-    else:
-        raise ValueError('Invalid configuration for prism 3')
+    #if config3 == 12:
+    #    n31 = np.array([0, 0, 1])
+    #    n32 = np.array([0, np.sin(alpha3), np.cos(alpha3)])
+    #    n32_0 = n32
+    #elif config3 == 21:
+    #    n31 = np.array([0, -np.sin(alpha3), np.cos(alpha3)])
+    #    n31_0 = n31
+    #    n32 = np.array([0, 0, 1])
+    #else:
+    #    raise ValueError('Invalid configuration for prism 3')
 
     # distance to observation plane
     D = 100000.0  # mm
     # D = 5000.0  # mm
     # observation plane
-    P4 = np.array([0, 0, z32 + D])
-    # P4 = np.array([0, 0, z22 + D])  # to show the pattern when using prism 1 and prism 2 (also change Pobs)
+    # P4 = np.array([0, 0, z32 + D])
+    P4 = np.array([0, 0, z22 + D])  # to show the pattern when using prism 1 and prism 2 (also change Pobs)
     # P4 = np.array([0, 0, z12 + D])  # to show the pattern when only using prism 1 (also change Pobs)
     n4 = np.array([0, 0, 1])
 
@@ -167,11 +172,12 @@ def main():
     b00s = [np.array([a, 0, 1])/np.linalg.norm(np.array([a, 0, 1])) for a
             in np.linspace(-lims, lims, 6)
             ]
+    b00s = [np.array([0, 0, 1])]  # only one beam
     if repetitive is True:
         ts = np.arange(0, 1*0.02, 1/240000)  # repetitive
     else:  # non-repetitive
         # ts = np.arange(0, 1.0/(10+2/3)*1.0456543, 1/240000)  # only one rotation
-        ts = np.arange(0, 1*1.0456543, 1/240000)
+        ts = np.arange(0, 1*0.2, 1/240000)  # 0.2 sec
 
     # list for the intersection point coordinates with the observation plane
     PobsX = np.empty((ts.shape[0]*6,), dtype=float)
@@ -189,10 +195,10 @@ def main():
             n22 = rot_surfaces(t, n22_0, omega2, theta02)
         else:
             n21 = rot_surfaces(t, n21_0, omega2, theta02)
-        if config3 == 12:
-            n32 = rot_surfaces(t, n32_0, omega3, theta03)
-        else:
-            n31 = rot_surfaces(t, n31_0, omega3, theta03)
+        #if config3 == 12:
+        #    n32 = rot_surfaces(t, n32_0, omega3, theta03)
+        #else:
+        #    n31 = rot_surfaces(t, n31_0, omega3, theta03)
         # refract the beam at the prism surfaces and the observation plane
         for bix, b00 in enumerate(b00s):
             # Refraction at surface 11
@@ -212,16 +218,16 @@ def main():
             b22 = refract_beam(b21, n22, n2, nAir)
 
             # Refraction at surface 31
-            Pb31 = intersect((Pb22, b22), (P31, n31))
-            b31 = refract_beam(b22, n31, nAir, n3)
+            #Pb31 = intersect((Pb22, b22), (P31, n31))
+            #b31 = refract_beam(b22, n31, nAir, n3)
     
             # Refraction at surface 32
-            Pb32 = intersect((Pb31, b31), (P32, n32))
-            b32 = refract_beam(b31, n32, n3, nAir)
+            #Pb32 = intersect((Pb31, b31), (P32, n32))
+            #b32 = refract_beam(b31, n32, n3, nAir)
 
             # Refraction at observation plane
-            Pobs = intersect((Pb32, b32), (P4, n4))
-            # Pobs = intersect((Pb22, b22), (P4, n4))  # to show the pattern when using prism 1 and prism 2 (also change P4)
+            #Pobs = intersect((Pb32, b32), (P4, n4))
+            Pobs = intersect((Pb22, b22), (P4, n4))  # to show the pattern when using prism 1 and prism 2 (also change P4)
             # Pobs = intersect((Pb12, b12), (P4, n4))  # to show the pattern when only using prism 1 (also change P4)
             # append the intersection point with the observation plane
             PobsX[tix*6+bix] = Pobs[0]
@@ -238,8 +244,8 @@ def main():
     plt.scatter(PobsX, PobsY, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
     # plt.scatter(phi, kappa, marker=marker, s=0.01, c=ts.repeat(6), cmap='viridis')
     plt.axis('equal')
-    plt.title(f'M1={M1} M2={M2} k1={k1} k2={k2} alpha1={alpha1_deg} omega1={omega1_rpm} lims={lims} '
-              f'd1={d1}\nd2={d2} d3={d3} R1={R1} R2={R2} R3={R3} dair1={dair1} dair2={dair2} D={D} t={ts[-1]}')
+    plt.title(f' alpha1={alpha1_deg} omega1={omega1_rpm} omega2={omega2_rpm} lims={lims} '
+              f'd1={d1}\nd2={d2} R1={R1} R2={R2} dair1={dair1} dair2={dair2} D={D} t={ts[-1]}')
     # plt.title(f'M1={M1} k1={k1} alpha1={alpha1_deg} omega1={omega1_rpm}\n'
     #           f'd1={d1} d2={d2} R1={R1} R2={R2} dair1={dair1} D={D}')
     # plt.xlim(-4000, 4000)
