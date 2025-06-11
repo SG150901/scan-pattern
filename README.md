@@ -1,2 +1,2 @@
 # scan-pattern
-scan pattern of the L2
+risley prism scan pattern (for DJI Zenmuse L2 and Livox Mid-40)
